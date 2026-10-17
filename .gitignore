@@ -1,0 +1,30 @@
+# dependencies
+node_modules/
+
+# next.js build output
+.next/
+out/
+next-env.d.ts.bak
+*.tsbuildinfo
+
+# environment files (never commit secrets)
+.env
+.env.*
+!.env.example
+
+# local SQLite databases
+prisma/*.db
+prisma/*.db-journal
+*.db
+*.db-journal
+
+# logs and OS files
+*.log
+npm-debug.log*
+.DS_Store
+Thumbs.db
+
+# editor / test output
+coverage/
+.vscode/*
+!.vscode/extensions.json

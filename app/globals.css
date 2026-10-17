@@ -1,0 +1,61 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  @apply bg-paper font-sans text-ink antialiased;
+}
+
+h1,
+h2,
+h3 {
+  @apply font-display tracking-tight;
+}
+
+:focus-visible {
+  outline: 3px solid #f4b400;
+  outline-offset: 2px;
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-md px-4 py-2.5 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60;
+  }
+  .btn-primary {
+    @apply btn bg-sign text-white hover:bg-sign-dark;
+  }
+  .btn-hazard {
+    @apply btn bg-hazard text-ink hover:bg-yellow-400;
+  }
+  .btn-secondary {
+    @apply btn border border-ink/25 bg-white text-ink hover:bg-ink/5;
+  }
+  .btn-danger {
+    @apply btn bg-red-700 text-white hover:bg-red-800;
+  }
+  .field {
+    @apply block w-full rounded-md border border-ink/30 bg-white px-3 py-2 text-sm text-ink placeholder:text-muted/70 disabled:bg-ink/5 disabled:text-muted;
+  }
+  .field[aria-invalid="true"] {
+    @apply border-red-600;
+  }
+  .label {
+    @apply mb-1 block text-sm font-semibold text-ink;
+  }
+  .panel {
+    @apply rounded-lg border border-line bg-white;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -1,0 +1,116 @@
+// CampusFix AI - Prisma schema (SQLite)
+// SQLite has no native enums in Prisma, so categories/priorities/statuses are
+// stored as strings and validated with Zod (see lib/constants.ts).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Complaint {
+  id             String   @id @default(cuid())
+  complaintId    String   @unique // public ID, e.g. CF-7K3M9P
+  title          String
+  description    String
+  location       String
+  category       String
+  studentName    String?
+  anonymous      Boolean  @default(false)
+  priority       String   @default("Medium")
+  status         String   @default("Submitted")
+  safetyFlag     Boolean  @default(false)
+
+  // AI / analysis results
+  aiSource          String? // "gemini" | "fallback" (null = not analyzed yet)
+  aiFallbackReason  String?
+  aiSummary         String?
+  aiReasoning       String?
+  recommendedAction String?
+  assignedTeam      String?
+  confidence        Float?
+  analyzedAt        DateTime?
+
+  // Duplicate linking (points at the original / root complaint)
+  duplicateOfId  String?
+  duplicateOf    Complaint?  @relation("Duplicates", fields: [duplicateOfId], references: [id], onDelete: SetNull)
+  duplicates     Complaint[] @relation("Duplicates")
+  similarityScore Float?
+
+  resolutionNotes String?
+  resolvedAt      DateTime?
+  isDemo          Boolean  @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tickets        MaintenanceTicket[]
+  investigations InvestigationRecord[]
+  auditLogs      AuditLog[]
+
+  @@index([status])
+  @@index([priority])
+  @@index([category])
+  @@index([location])
+  @@index([createdAt])
+  @@index([duplicateOfId])
+}
+
+model MaintenanceTicket {
+  id              String   @id @default(cuid())
+  ticketId        String   @unique // e.g. TK-4HX8QD
+  complaintId     String
+  complaint       Complaint @relation(fields: [complaintId], references: [id], onDelete: Cascade)
+  assignedTeam    String
+  recommendedAction String
+  priority        String
+  status          String   @default("Approved")
+  approvedBy      String?
+  resolutionNotes String?
+  resolvedAt      DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  auditLogs AuditLog[]
+
+  @@index([complaintId])
+  @@index([status])
+}
+
+model InvestigationRecord {
+  id               String   @id @default(cuid())
+  complaintId      String
+  complaint        Complaint @relation(fields: [complaintId], references: [id], onDelete: Cascade)
+  source           String   // "gemini" | "fallback"
+  summary          String
+  reasoning        String
+  recommendedAction String
+  suggestedTeam    String
+  suggestedPriority String
+  relatedCount     Int      @default(0)
+  similarJson      String   @default("[]") // JSON array of similarity matches
+  stepsJson        String   @default("[]") // JSON array of agent tool steps
+  ticketSuggested  Boolean  @default(false)
+  confidence       Float?
+  createdAt        DateTime @default(now())
+
+  @@index([complaintId])
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  complaintId String?
+  complaint   Complaint? @relation(fields: [complaintId], references: [id], onDelete: Cascade)
+  ticketId    String?
+  ticket      MaintenanceTicket? @relation(fields: [ticketId], references: [id], onDelete: SetNull)
+  action      String
+  actor       String   @default("system") // "system" | "agent" | "admin" | "student"
+  details     String
+  createdAt   DateTime @default(now())
+
+  @@index([complaintId])
+  @@index([createdAt])
+}
