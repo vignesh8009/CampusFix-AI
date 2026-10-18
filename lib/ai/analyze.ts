@@ -22,13 +22,33 @@ export interface AnalyzeOptions {
   geminiEnabled?: boolean;
 }
 
+/** Removes anything that looks like an API key. */
+function redactSecrets(text: string): string {
+  return text.replace(/AIza[0-9A-Za-z_-]{10,}|AQ\.[0-9A-Za-z_-]{10,}/g, "[redacted]");
+}
+
 /** Builds a short, safe description of an API failure (status code + trimmed message). */
 function describeError(err: unknown): string {
   const status = (err as { status?: number })?.status;
   let detail = err instanceof Error ? err.message : "unknown error";
   // Defensive: never let anything that looks like an API key reach the UI or database.
-  detail = detail.replace(/AIza[0-9A-Za-z_-]{10,}|AQ\.[0-9A-Za-z_-]{10,}/g, "[redacted]");
+  detail = redactSecrets(detail);
   return `Gemini request failed (${status ?? "error"}): ${detail.slice(0, 200)}`;
+}
+
+/**
+ * Gemini sometimes wraps JSON in markdown fences or adds extra text.
+ * Strip the fences and keep only the part between the first "{" and the last "}".
+ */
+function cleanAiText(text: string): string {
+  let cleaned = text.trim();
+  cleaned = cleaned.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "");
+  const start = cleaned.indexOf("{");
+  const end = cleaned.lastIndexOf("}");
+  if (start !== -1 && end > start) {
+    cleaned = cleaned.slice(start, end + 1);
+  }
+  return cleaned.trim();
 }
 
 /**
@@ -52,9 +72,17 @@ export async function analyzeComplaintText(
   } else {
     try {
       const text = await generate(buildPrompt(input));
-      analysis = parseAiResponse(text);
-      if (analysis) source = "gemini";
-      else fallbackReason = "Gemini returned a response that failed validation";
+
+      // Try the cleaned text first, then the raw text as a backup.
+      analysis = parseAiResponse(cleanAiText(text)) ?? parseAiResponse(text);
+
+      if (analysis) {
+        source = "gemini";
+      } else {
+        const preview = redactSecrets(text).replace(/\s+/g, " ").slice(0, 150);
+        fallbackReason = `Gemini returned a response that failed validation: ${preview}`;
+        console.error("[ai] Validation failed. Raw Gemini text:", redactSecrets(text).slice(0, 2000));
+      }
     } catch (err) {
       fallbackReason = describeError(err);
       console.error("[ai] Gemini call failed:", fallbackReason);
