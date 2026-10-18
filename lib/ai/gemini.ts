@@ -1,4 +1,5 @@
 import { GoogleGenAI } from "@google/genai";
+import type { GenerateContentConfig } from "@google/genai";
 import { CATEGORIES } from "../constants";
 import type { ComplaintTextInput } from "./fallback";
 
@@ -91,13 +92,12 @@ export async function generateWithGemini(
 
   // Thinking tokens count toward maxOutputTokens, so keep thinking low
   // and leave plenty of room for the JSON answer.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const config: any = {
+  const config = {
     responseMimeType: "application/json",
     temperature: 0.2,
     maxOutputTokens: 4096,
     thinkingConfig: { thinkingLevel: "low" },
-  };
+  } as unknown as GenerateContentConfig;
 
   const response = await ai.models.generateContent({
     model: getGeminiModel(),
