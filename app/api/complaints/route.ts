@@ -6,6 +6,8 @@ import { listComplaints } from "@/lib/database/queries";
 import { runAgentWorkflow } from "@/lib/agent/workflow";
 import { prisma } from "@/lib/database/prisma";
 
+   export const maxDuration = 60;
+
 export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
