@@ -200,7 +200,7 @@ After 5 wrong attempts from the same address, login is paused for a minute.
 | --- | --- | --- |
 | Set | Login required | Login required |
 | Empty | Admin is **open** (red warning shown in the sidebar) | Admin is **disabled** until a passcode is set |
-
+ admin _password login:abcdefghijkh
 This is a shared passcode, not individual accounts, and passcode changes need a restart (and a rebuild in
 production). Serve the site over HTTPS if you expose it beyond a trusted network.
 
