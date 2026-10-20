@@ -189,7 +189,7 @@ are public. Everything for staff is protected by a shared passcode:
 Set it in `.env`, then restart the server:
 
 ```
-ADMIN_PASSCODE="a-long-hard-to-guess-passcode"
+ADMIN_PASSCODE="abcdefghijkh"
 ```
 
 Open `/dashboard`; you are redirected to `/admin/login`. After logging in, a signed, HTTP-only cookie keeps you
